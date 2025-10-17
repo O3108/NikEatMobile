@@ -13,6 +13,7 @@ import { useAlert } from '../contexts/AlertContext';
 import { Product, Settings } from '../types';
 import { api } from '../services/api';
 import SyncStatus from '../components/SyncStatus';
+import TimerModal from '../components/TimerModal';
 import { formatDate, formatDuration } from '../utils/dateUtils';
 import { calculateActiveInsulin, getPassedTime, calculateInsulinDose } from '../utils/insulinUtils';
 
@@ -28,6 +29,7 @@ const CalculatorScreen = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedProducts, setSelectedProducts] = useState<(Product & { count: number })[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -199,7 +201,12 @@ const CalculatorScreen = () => {
 
       <TouchableOpacity
         style={[styles.saveButton, (!totalValue || totalValue < 0 || isLoading) && styles.saveButtonDisabled]}
-        onPress={handleSave}
+        onPress={() => {
+          handleSave();
+          if (totalValue > 0) {
+            setTimerModalVisible(true);
+          }
+        }}
         disabled={!totalValue || totalValue < 0 || isLoading}
       >
         {isLoading ? (
@@ -212,6 +219,12 @@ const CalculatorScreen = () => {
           </Text>
         )}
       </TouchableOpacity>
+
+      <TimerModal
+        visible={timerModalVisible}
+        onClose={() => setTimerModalVisible(false)}
+        insulinDose={totalValue}
+      />
     </ScrollView>
   );
 };
