@@ -7,18 +7,21 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useStore } from '../contexts/StoreContext';
 import { useAlert } from '../contexts/AlertContext';
 import { Product, Settings } from '../types';
 import { api } from '../services/api';
 import SyncStatus from '../components/SyncStatus';
+import { useRefresh } from '../hooks/useRefresh';
 import { formatDate, formatDuration } from '../utils/dateUtils';
 import { calculateActiveInsulin, getPassedTime, calculateInsulinDose } from '../utils/insulinUtils';
 
 const CalculatorScreen = () => {
   const { products, settings, activeInsulin, setActiveInsulin, isAccessEdit } = useStore();
   const { setAlertData } = useAlert();
+  const { refreshing, onRefresh } = useRefresh();
 
   const hours = new Date().getHours();
   const [selectedSettings, setSelectedSettings] = useState<keyof Settings>(
@@ -98,7 +101,17 @@ const CalculatorScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#007AFF']}
+          tintColor="#007AFF"
+        />
+      }
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Покушаем</Text>
         <SyncStatus />
