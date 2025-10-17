@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Linking,
+  Alert,
 } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
@@ -14,9 +16,6 @@ interface TimerModalProps {
   onClose: () => void;
   insulinDose: number;
 }
-
-// Глобальная переменная для хранения ID последнего таймера
-let lastNotificationId: string | null = null;
 
 const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }) => {
   const [hours, setHours] = useState(1);
@@ -39,60 +38,59 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
     }
   };
 
-  const scheduleNotification = async () => {
+  const openSystemTimer = async () => {
     try {
-      console.log('=== Начало установки таймера ===');
-      
-      // Запрос разрешений
-      const { status } = await Notifications.requestPermissionsAsync();
-      console.log('Статус разрешений:', status);
-      
-      if (status !== 'granted') {
-        alert('Необходимо разрешение на уведомления. Откройте Настройки → NikEat → Уведомления');
-        return;
-      }
-
-      // Отменяем предыдущий таймер, если он был
-      if (lastNotificationId) {
-        await Notifications.cancelScheduledNotificationAsync(lastNotificationId);
-        console.log('Предыдущий таймер отменен:', lastNotificationId);
-      }
-
       // Вычисляем время в секундах
       const totalSeconds = hours * 3600 + minutes * 60;
-      console.log('Время в секундах:', totalSeconds);
-      console.log('Время:', hours, 'ч', minutes, 'мин');
+      console.log('Открытие системного таймера:', hours, 'ч', minutes, 'мин');
+      console.log('Всего секунд:', totalSeconds);
 
-      // Планируем новое уведомление
-      const notificationId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '⏰ Время проверить глюкозу!',
-          body: `Прошло ${hours} ч ${minutes} мин после инъекции ${insulinDose} ед инсулина`,
-          sound: true,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-          vibrate: [0, 250, 250, 250],
-        },
-        trigger: {
-          seconds: totalSeconds,
-          repeats: false,
-        } as any,
-      });
-
-      // Сохраняем ID нового таймера
-      lastNotificationId = notificationId;
-      console.log('✅ Таймер успешно установлен!');
-      console.log('ID уведомления:', notificationId);
-      console.log('Сработает через:', totalSeconds, 'секунд');
+      if (Platform.OS === 'ios') {
+        // iOS - открываем приложение Часы с таймером
+        const url = `clock-timer://timer?duration=${totalSeconds}`;
+        const canOpen = await Linking.canOpenURL(url);
+        
+        if (canOpen) {
+          await Linking.openURL(url);
+          console.log('✅ Открыто приложение Часы (iOS)');
+        } else {
+          // Альтернативный способ для iOS
+          await Linking.openURL('clock-timer://');
+          console.log('✅ Открыто приложение Часы (iOS) - установите время вручную');
+          Alert.alert(
+            'Установите таймер',
+            `Установите таймер на ${hours} ч ${minutes} мин в приложении Часы`,
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        // Android - открываем приложение Часы с таймером
+        const url = `intent://timer/${totalSeconds}#Intent;scheme=android.intent.action.SET_TIMER;end`;
+        
+        try {
+          await Linking.openURL(url);
+          console.log('✅ Открыто приложение Часы (Android)');
+        } catch (error) {
+          // Альтернативный способ для Android
+          await Linking.openURL('content://com.android.deskclock/timer');
+          console.log('✅ Открыто приложение Часы (Android) - установите время вручную');
+          Alert.alert(
+            'Установите таймер',
+            `Установите таймер на ${hours} ч ${minutes} мин в приложении Часы`,
+            [{ text: 'OK' }]
+          );
+        }
+      }
       
-      // Показываем время срабатывания
-      const fireDate = new Date(Date.now() + totalSeconds * 1000);
-      console.log('Время срабатывания:', fireDate.toLocaleString('ru-RU'));
-
-      alert(`✅ Таймер установлен на ${hours} ч ${minutes} мин\n\nСработает в ${fireDate.toLocaleTimeString('ru-RU')}`);
       onClose();
     } catch (error) {
-      console.error('❌ Ошибка установки таймера:', error);
-      alert(`Ошибка установки таймера: ${error}`);
+      console.error('❌ Ошибка открытия таймера:', error);
+      Alert.alert(
+        'Не удалось открыть таймер',
+        `Откройте приложение Часы вручную и установите таймер на ${hours} ч ${minutes} мин`,
+        [{ text: 'OK' }]
+      );
+      onClose();
     }
   };
 
@@ -105,9 +103,9 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
     >
       <View style={styles.overlay}>
         <View style={styles.modal}>
-          <Text style={styles.title}>Установить таймер</Text>
+          <Text style={styles.title}>⏰ Таймер</Text>
           <Text style={styles.subtitle}>
-            Напомнить проверить глюкозу через:
+            Откроется системное приложение Часы с таймером
           </Text>
 
           <View style={styles.timeContainer}>
@@ -158,48 +156,6 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
             </View>
           </View>
 
-          {/* Кнопка для теста (10 секунд) */}
-          <TouchableOpacity
-            style={styles.testButton}
-            onPress={async () => {
-              try {
-                const { status } = await Notifications.requestPermissionsAsync();
-                if (status !== 'granted') {
-                  alert('Необходимо разрешение на уведомления');
-                  return;
-                }
-                
-                if (lastNotificationId) {
-                  await Notifications.cancelScheduledNotificationAsync(lastNotificationId);
-                }
-                
-                const notificationId = await Notifications.scheduleNotificationAsync({
-                  content: {
-                    title: '🧪 Тестовое уведомление',
-                    body: 'Таймер работает! Это тест через 10 секунд',
-                    sound: true,
-                    priority: Notifications.AndroidNotificationPriority.HIGH,
-                    vibrate: [0, 250, 250, 250],
-                  },
-                  trigger: {
-                    seconds: 10,
-                    repeats: false,
-                  } as any,
-                });
-                
-                lastNotificationId = notificationId;
-                console.log('🧪 Тестовый таймер установлен на 10 секунд');
-                alert('🧪 Тестовый таймер установлен!\nУведомление придет через 10 секунд');
-                onClose();
-              } catch (error) {
-                console.error('Ошибка теста:', error);
-                alert(`Ошибка: ${error}`);
-              }
-            }}
-          >
-            <Text style={styles.testButtonText}>🧪 Тест (10 сек)</Text>
-          </TouchableOpacity>
-
           <View style={styles.actions}>
             <TouchableOpacity
               style={[styles.actionButton, styles.cancelButton]}
@@ -210,9 +166,9 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
 
             <TouchableOpacity
               style={[styles.actionButton, styles.confirmButton]}
-              onPress={scheduleNotification}
+              onPress={openSystemTimer}
             >
-              <Text style={styles.confirmButtonText}>Установить</Text>
+              <Text style={styles.confirmButtonText}>Открыть таймер</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -312,18 +268,6 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  testButton: {
-    backgroundColor: '#FFA500',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  testButtonText: {
-    fontSize: 14,
     fontWeight: '600',
     color: '#fff',
   },
