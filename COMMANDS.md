@@ -55,27 +55,39 @@ eas submit --platform android
 ### EAS Update (обновление без пересборки)
 
 ```bash
-# Настройка updates
+# Настройка updates (один раз)
 eas update:configure
 
-# Публикация обновления
+# Публикация обновления (основная команда)
 eas update --branch production --message "Bug fixes"
 eas update --branch development --message "New feature"
+eas update --branch staging --message "QA testing"
 
 # Список обновлений
 eas update:list
+eas update:list --branch production
 
 # Просмотр обновления
 eas update:view [UPDATE_ID]
 
 # Откат к предыдущей версии
-eas update --branch production --republish [UPDATE_ID]
+eas update --branch production --message "Rollback" --republish [UPDATE_ID]
 
 # Список веток
 eas branch:list
 
 # Удаление обновления
 eas update:delete [UPDATE_ID]
+```
+
+### Быстрое обновление после изменений
+
+```bash
+# Полный цикл: commit + update + push
+git add . && git commit -m "feat: Changes" && eas update --branch production --message "Changes" && git push
+
+# Только update
+eas update --branch production --message "Your changes"
 ```
 
 ## Разработка
