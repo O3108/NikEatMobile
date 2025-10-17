@@ -41,10 +41,14 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
 
   const scheduleNotification = async () => {
     try {
+      console.log('=== Начало установки таймера ===');
+      
       // Запрос разрешений
       const { status } = await Notifications.requestPermissionsAsync();
+      console.log('Статус разрешений:', status);
+      
       if (status !== 'granted') {
-        alert('Необходимо разрешение на уведомления');
+        alert('Необходимо разрешение на уведомления. Откройте Настройки → NikEat → Уведомления');
         return;
       }
 
@@ -56,6 +60,8 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
 
       // Вычисляем время в секундах
       const totalSeconds = hours * 3600 + minutes * 60;
+      console.log('Время в секундах:', totalSeconds);
+      console.log('Время:', hours, 'ч', minutes, 'мин');
 
       // Планируем новое уведомление
       const notificationId = await Notifications.scheduleNotificationAsync({
@@ -66,18 +72,27 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
           priority: Notifications.AndroidNotificationPriority.HIGH,
           vibrate: [0, 250, 250, 250],
         },
-        trigger: { seconds: totalSeconds } as any,
+        trigger: {
+          seconds: totalSeconds,
+          repeats: false,
+        } as any,
       });
 
       // Сохраняем ID нового таймера
       lastNotificationId = notificationId;
-      console.log('Новый таймер установлен:', notificationId);
+      console.log('✅ Таймер успешно установлен!');
+      console.log('ID уведомления:', notificationId);
+      console.log('Сработает через:', totalSeconds, 'секунд');
+      
+      // Показываем время срабатывания
+      const fireDate = new Date(Date.now() + totalSeconds * 1000);
+      console.log('Время срабатывания:', fireDate.toLocaleString('ru-RU'));
 
-      alert(`Таймер установлен на ${hours} ч ${minutes} мин`);
+      alert(`✅ Таймер установлен на ${hours} ч ${minutes} мин\n\nСработает в ${fireDate.toLocaleTimeString('ru-RU')}`);
       onClose();
     } catch (error) {
-      console.error('Error scheduling notification:', error);
-      alert('Ошибка установки таймера');
+      console.error('❌ Ошибка установки таймера:', error);
+      alert(`Ошибка установки таймера: ${error}`);
     }
   };
 
@@ -142,6 +157,48 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Кнопка для теста (10 секунд) */}
+          <TouchableOpacity
+            style={styles.testButton}
+            onPress={async () => {
+              try {
+                const { status } = await Notifications.requestPermissionsAsync();
+                if (status !== 'granted') {
+                  alert('Необходимо разрешение на уведомления');
+                  return;
+                }
+                
+                if (lastNotificationId) {
+                  await Notifications.cancelScheduledNotificationAsync(lastNotificationId);
+                }
+                
+                const notificationId = await Notifications.scheduleNotificationAsync({
+                  content: {
+                    title: '🧪 Тестовое уведомление',
+                    body: 'Таймер работает! Это тест через 10 секунд',
+                    sound: true,
+                    priority: Notifications.AndroidNotificationPriority.HIGH,
+                    vibrate: [0, 250, 250, 250],
+                  },
+                  trigger: {
+                    seconds: 10,
+                    repeats: false,
+                  } as any,
+                });
+                
+                lastNotificationId = notificationId;
+                console.log('🧪 Тестовый таймер установлен на 10 секунд');
+                alert('🧪 Тестовый таймер установлен!\nУведомление придет через 10 секунд');
+                onClose();
+              } catch (error) {
+                console.error('Ошибка теста:', error);
+                alert(`Ошибка: ${error}`);
+              }
+            }}
+          >
+            <Text style={styles.testButtonText}>🧪 Тест (10 сек)</Text>
+          </TouchableOpacity>
 
           <View style={styles.actions}>
             <TouchableOpacity
@@ -255,6 +312,18 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  testButton: {
+    backgroundColor: '#FFA500',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  testButtonText: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#fff',
   },
