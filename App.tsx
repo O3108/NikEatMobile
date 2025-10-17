@@ -1,12 +1,22 @@
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, StyleSheet } from 'react-native';
+import { StoreProvider } from './src/contexts/StoreContext';
+import { AlertProvider } from './src/contexts/AlertContext';
+import AppNavigator from './src/navigation/AppNavigator';
+import Alert from './src/components/Alert';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaView style={styles.container}>
+      <StoreProvider>
+        <AlertProvider>
+          <AppNavigator />
+          <Alert />
+          <StatusBar style="auto" />
+        </AlertProvider>
+      </StoreProvider>
+    </SafeAreaView>
   );
 }
 
@@ -14,7 +24,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
