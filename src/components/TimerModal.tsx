@@ -66,9 +66,7 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
           priority: Notifications.AndroidNotificationPriority.HIGH,
           vibrate: [0, 250, 250, 250],
         },
-        trigger: {
-          seconds: totalSeconds,
-        },
+        trigger: { seconds: totalSeconds } as any,
       });
 
       // Сохраняем ID нового таймера
