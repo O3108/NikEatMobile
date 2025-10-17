@@ -46,39 +46,79 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
       console.log('Всего секунд:', totalSeconds);
 
       if (Platform.OS === 'ios') {
-        // iOS - открываем приложение Часы с таймером
-        const url = `clock-timer://timer?duration=${totalSeconds}`;
-        const canOpen = await Linking.canOpenURL(url);
-        
-        if (canOpen) {
-          await Linking.openURL(url);
-          console.log('✅ Открыто приложение Часы (iOS)');
-        } else {
-          // Альтернативный способ для iOS
-          await Linking.openURL('clock-timer://');
-          console.log('✅ Открыто приложение Часы (iOS) - установите время вручную');
-          Alert.alert(
-            'Установите таймер',
-            `Установите таймер на ${hours} ч ${minutes} мин в приложении Часы`,
-            [{ text: 'OK' }]
-          );
-        }
+        // iOS - показываем инструкцию, так как прямое открытие не работает
+        Alert.alert(
+          '⏰ Установите таймер',
+          `1. Откройте приложение "Часы"\n2. Перейдите на вкладку "Таймер"\n3. Установите ${hours} ч ${minutes} мин\n4. Нажмите "Начать"`,
+          [
+            {
+              text: 'Отмена',
+              style: 'cancel',
+            },
+            {
+              text: 'Открыть Часы',
+              onPress: async () => {
+                try {
+                  // Пробуем разные URL schemes для iOS
+                  const urls = [
+                    'clock-timer://',
+                    'clock-alarm://',
+                    'x-apple-clock://',
+                  ];
+                  
+                  let opened = false;
+                  for (const url of urls) {
+                    try {
+                      const canOpen = await Linking.canOpenURL(url);
+                      if (canOpen) {
+                        await Linking.openURL(url);
+                        console.log('✅ Открыто приложение Часы (iOS):', url);
+                        opened = true;
+                        break;
+                      }
+                    } catch (e) {
+                      console.log('Не удалось открыть:', url);
+                    }
+                  }
+                  
+                  if (!opened) {
+                    Alert.alert(
+                      'Откройте Часы вручную',
+                      'Приложение "Часы" находится на главном экране iPhone'
+                    );
+                  }
+                } catch (error) {
+                  console.error('Ошибка:', error);
+                }
+              },
+            },
+          ]
+        );
       } else {
-        // Android - открываем приложение Часы с таймером
-        const url = `intent://timer/${totalSeconds}#Intent;scheme=android.intent.action.SET_TIMER;end`;
-        
+        // Android - пробуем открыть с установленным временем
         try {
-          await Linking.openURL(url);
-          console.log('✅ Открыто приложение Часы (Android)');
+          // Способ 1: через Intent
+          const intentUrl = `intent:#Intent;action=android.intent.action.SET_TIMER;i.android.intent.extra.alarm.LENGTH=${totalSeconds};i.android.intent.extra.alarm.SKIP_UI=true;end`;
+          await Linking.openURL(intentUrl);
+          console.log('✅ Таймер установлен (Android)');
         } catch (error) {
-          // Альтернативный способ для Android
-          await Linking.openURL('content://com.android.deskclock/timer');
-          console.log('✅ Открыто приложение Часы (Android) - установите время вручную');
-          Alert.alert(
-            'Установите таймер',
-            `Установите таймер на ${hours} ч ${minutes} мин в приложении Часы`,
-            [{ text: 'OK' }]
-          );
+          console.log('Способ 1 не сработал, пробуем способ 2');
+          
+          try {
+            // Способ 2: просто открываем приложение Часы
+            await Linking.openURL('content://com.android.deskclock/timer');
+            Alert.alert(
+              'Установите таймер',
+              `Установите таймер на ${hours} ч ${minutes} мин`,
+              [{ text: 'OK' }]
+            );
+          } catch (error2) {
+            Alert.alert(
+              'Откройте Часы вручную',
+              `Откройте приложение "Часы" и установите таймер на ${hours} ч ${minutes} мин`,
+              [{ text: 'OK' }]
+            );
+          }
         }
       }
       
