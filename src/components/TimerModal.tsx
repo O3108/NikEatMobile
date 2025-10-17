@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Modal,
   View,
@@ -14,6 +14,9 @@ interface TimerModalProps {
   onClose: () => void;
   insulinDose: number;
 }
+
+// Глобальная переменная для хранения ID последнего таймера
+let lastNotificationId: string | null = null;
 
 const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }) => {
   const [hours, setHours] = useState(1);
@@ -45,11 +48,17 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
         return;
       }
 
+      // Отменяем предыдущий таймер, если он был
+      if (lastNotificationId) {
+        await Notifications.cancelScheduledNotificationAsync(lastNotificationId);
+        console.log('Предыдущий таймер отменен:', lastNotificationId);
+      }
+
       // Вычисляем время в секундах
       const totalSeconds = hours * 3600 + minutes * 60;
 
-      // Планируем уведомление
-      await Notifications.scheduleNotificationAsync({
+      // Планируем новое уведомление
+      const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: '⏰ Время проверить глюкозу!',
           body: `Прошло ${hours} ч ${minutes} мин после инъекции ${insulinDose} ед инсулина`,
@@ -61,6 +70,10 @@ const TimerModal: React.FC<TimerModalProps> = ({ visible, onClose, insulinDose }
           seconds: totalSeconds,
         },
       });
+
+      // Сохраняем ID нового таймера
+      lastNotificationId = notificationId;
+      console.log('Новый таймер установлен:', notificationId);
 
       alert(`Таймер установлен на ${hours} ч ${minutes} мин`);
       onClose();
