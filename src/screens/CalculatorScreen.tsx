@@ -16,6 +16,7 @@ import { api } from '../services/api';
 import SyncStatus from '../components/SyncStatus';
 import { useRefresh } from '../hooks/useRefresh';
 import { formatDate, formatDuration } from '../utils/dateUtils';
+import { parseNumber } from '../utils/numberUtils';
 import { calculateActiveInsulin, getPassedTime, calculateInsulinDose } from '../utils/insulinUtils';
 
 const CalculatorScreen = () => {
@@ -50,7 +51,7 @@ const CalculatorScreen = () => {
   }, [selectedProducts]);
 
   const totalValue = useMemo(() => {
-    const glucoseValue = currentGlucose ? parseFloat(currentGlucose) : 0;
+    const glucoseValue = parseNumber(currentGlucose);
     const settingValue = settings?.[selectedSettings] || 0;
     
     return calculateInsulinDose(totalXE, glucoseValue, settingValue, newActiveInsulin, passedTime);
@@ -63,7 +64,7 @@ const CalculatorScreen = () => {
 
   const updateProductCount = (index: number, count: string) => {
     const newProducts = [...selectedProducts];
-    newProducts[index].count = parseFloat(count) || 0;
+    newProducts[index].count = parseNumber(count);
     setSelectedProducts(newProducts);
   };
 

@@ -16,6 +16,7 @@ import { Product } from '../types';
 import { api } from '../services/api';
 import SyncStatus from '../components/SyncStatus';
 import { useRefresh } from '../hooks/useRefresh';
+import { parseNumber } from '../utils/numberUtils';
 
 const ProductsScreen = () => {
   const { products, setProducts, isAccessEdit } = useStore();
@@ -44,7 +45,7 @@ const ProductsScreen = () => {
         const updatedProduct: Product = {
           ...editingProduct,
           name: name.trim(),
-          value: parseFloat(value),
+          value: parseNumber(value),
         };
         
         if (isAccessEdit) {
@@ -57,7 +58,7 @@ const ProductsScreen = () => {
         // Создание нового продукта
         const newProduct: Omit<Product, 'id'> = {
           name: name.trim(),
-          value: parseFloat(value),
+          value: parseNumber(value),
         };
         
         if (isAccessEdit) {

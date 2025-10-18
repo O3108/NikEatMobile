@@ -14,6 +14,7 @@ import { useAlert } from '../contexts/AlertContext';
 import { Settings } from '../types';
 import { api } from '../services/api';
 import SyncStatus from '../components/SyncStatus';
+import { parseNumber } from '../utils/numberUtils';
 
 const SettingsScreen = () => {
   const { settings, setSettings, isAccessEdit } = useStore();
@@ -36,7 +37,7 @@ const SettingsScreen = () => {
   const handleChange = (field: keyof Settings, value: string) => {
     setFormData({
       ...formData,
-      [field]: parseFloat(value) || 0,
+      [field]: parseNumber(value),
     });
   };
 
