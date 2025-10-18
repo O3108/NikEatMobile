@@ -37,3 +37,9 @@ export type ActiveInsulin = {
   date: string;
   value: number;
 };
+
+export type GlucoseCalculation = {
+  recommendedDose: number;
+  timestamp: string;
+  notes?: string;
+};
