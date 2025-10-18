@@ -1,6 +1,6 @@
-export type Product = { 
-  name: string; 
-  value: number; 
+export type Product = {
+  name: string;
+  value: number;
   id: number;
 };
 
@@ -36,10 +36,4 @@ export type ActiveInsulin = {
   id: number;
   date: string;
   value: number;
-};
-
-export type GlucoseCalculation = {
-  recommendedDose: number;
-  timestamp: string;
-  notes?: string;
 };

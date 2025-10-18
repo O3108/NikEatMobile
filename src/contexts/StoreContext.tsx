@@ -71,12 +71,24 @@ export const StoreProvider = ({ children }: StoreProviderProps) => {
           setSettings(serverSettings);
           setGlucose(serverGlucose);
           
+          // Вызываем calculateGlucose асинхронно (не блокируем загрузку)
+          if (serverGlucose) {
+            api.calculateGlucose(serverGlucose)
+              .then(calculateResponse => {
+                setGlucose(calculateResponse);
+              })
+              .catch(error => {
+                console.warn('Failed to calculate glucose:', error);
+                // Оставляем serverGlucose, который уже установлен
+              });
+          }
+
           // Проверяем, какой активный инсулин новее - локальный или серверный
           const localInsulin = storedActiveInsulin ? JSON.parse(storedActiveInsulin) : null;
           if (localInsulin && serverActiveInsulin) {
             const localDate = parseDate(localInsulin.date);
             const serverDate = parseDate(serverActiveInsulin.date);
-            
+
             if (localDate > serverDate) {
               // Локальный новее - отправляем на сервер
               await api.updateActiveInsulin(localInsulin);

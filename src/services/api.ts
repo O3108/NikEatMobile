@@ -1,4 +1,4 @@
-import { Product, Settings, ActiveInsulin, Glucose, GlucoseCalculation } from '../types';
+import { Product, Settings, ActiveInsulin, Glucose } from '../types';
 
 // Замените на URL вашего сервера
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
@@ -95,11 +95,11 @@ export const api = {
   },
 
   // Calculate Glucose
-  async calculateGlucose(glucoseData: { value: number; time: string }): Promise<GlucoseCalculation> {
+  async calculateGlucose(glucose: Glucose): Promise<Glucose> {
     const response = await fetch(`${API_BASE_URL}/api/glucose/calculate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(glucoseData),
+      body: JSON.stringify(glucose),
     });
     const data = await response.json();
     if ('error' in data) throw new Error(data.error);
