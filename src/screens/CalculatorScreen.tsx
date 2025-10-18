@@ -19,6 +19,9 @@ import { formatDate, formatDuration } from '../utils/dateUtils';
 import { parseNumber } from '../utils/numberUtils';
 import { calculateActiveInsulin, getPassedTime, calculateInsulinDose } from '../utils/insulinUtils';
 
+// Локальный тип для продукта с возможностью хранить count как строку (для ввода с запятой)
+type ProductWithCount = Product & { count: number | string };
+
 const CalculatorScreen = () => {
   const { products, settings, activeInsulin, setActiveInsulin, isAccessEdit } = useStore();
   const { setAlertData } = useAlert();
@@ -30,7 +33,7 @@ const CalculatorScreen = () => {
   );
   const [currentGlucose, setCurrentGlucose] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedProducts, setSelectedProducts] = useState<(Product & { count: number })[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<ProductWithCount[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const filteredProducts = useMemo(() => {
@@ -46,7 +49,10 @@ const CalculatorScreen = () => {
 
   const totalXE = useMemo(() => {
     return Math.round(
-      selectedProducts.reduce((acc, curr) => acc + curr.value * curr.count, 0) * 10
+      selectedProducts.reduce((acc, curr) => {
+        const count = typeof curr.count === 'string' ? parseNumber(curr.count) : curr.count;
+        return acc + curr.value * count;
+      }, 0) * 10
     ) / 10;
   }, [selectedProducts]);
 
@@ -64,7 +70,9 @@ const CalculatorScreen = () => {
 
   const updateProductCount = (index: number, count: string) => {
     const newProducts = [...selectedProducts];
-    newProducts[index].count = parseNumber(count);
+    // Сохраняем строку как есть, чтобы можно было вводить запятую
+    // Парсим только для расчетов
+    newProducts[index].count = count;
     setSelectedProducts(newProducts);
   };
 
@@ -199,7 +207,7 @@ const CalculatorScreen = () => {
             <View style={styles.productActions}>
               <TextInput
                 style={styles.productInput}
-                value={String(product.count)}
+                value={typeof product.count === 'string' ? product.count : String(product.count)}
                 onChangeText={(text) => updateProductCount(index, text)}
                 keyboardType="decimal-pad"
               />
