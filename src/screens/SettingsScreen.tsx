@@ -16,10 +16,15 @@ import { api } from '../services/api';
 import SyncStatus from '../components/SyncStatus';
 import { parseNumber } from '../utils/numberUtils';
 
+// Тип для формы с возможностью хранить строки во время ввода
+type SettingsForm = {
+  [K in keyof Omit<Settings, 'id'>]: number | string;
+};
+
 const SettingsScreen = () => {
   const { settings, setSettings, isAccessEdit } = useStore();
   const { setAlertData } = useAlert();
-  const [formData, setFormData] = useState<Partial<Settings>>({
+  const [formData, setFormData] = useState<Partial<SettingsForm>>({
     longMorning: 0,
     longEvening: 0,
     breakfast: 0,
@@ -37,17 +42,22 @@ const SettingsScreen = () => {
   const handleChange = (field: keyof Settings, value: string) => {
     setFormData({
       ...formData,
-      [field]: parseNumber(value),
+      [field]: value, // Сохраняем строку как есть
     });
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const settingsToSave = {
-        ...formData,
+      // Парсим все значения перед сохранением
+      const settingsToSave: Settings = {
         id: settings?.id || 1,
-      } as Settings;
+        longMorning: parseNumber(String(formData.longMorning || 0)),
+        longEvening: parseNumber(String(formData.longEvening || 0)),
+        breakfast: parseNumber(String(formData.breakfast || 0)),
+        lunch: parseNumber(String(formData.lunch || 0)),
+        dinner: parseNumber(String(formData.dinner || 0)),
+      };
 
       if (isAccessEdit) {
         await api.updateSettings(settingsToSave);
@@ -77,7 +87,7 @@ const SettingsScreen = () => {
           <Text style={styles.label}>Утро</Text>
           <TextInput
             style={styles.input}
-            value={String(formData.longMorning || '')}
+            value={typeof formData.longMorning === 'string' ? formData.longMorning : String(formData.longMorning || '')}
             onChangeText={(value) => handleChange('longMorning', value)}
             keyboardType="decimal-pad"
             placeholder="0"
@@ -88,7 +98,7 @@ const SettingsScreen = () => {
           <Text style={styles.label}>Вечер</Text>
           <TextInput
             style={styles.input}
-            value={String(formData.longEvening || '')}
+            value={typeof formData.longEvening === 'string' ? formData.longEvening : String(formData.longEvening || '')}
             onChangeText={(value) => handleChange('longEvening', value)}
             keyboardType="decimal-pad"
             placeholder="0"
@@ -103,7 +113,7 @@ const SettingsScreen = () => {
           <Text style={styles.label}>Завтрак</Text>
           <TextInput
             style={styles.input}
-            value={String(formData.breakfast || '')}
+            value={typeof formData.breakfast === 'string' ? formData.breakfast : String(formData.breakfast || '')}
             onChangeText={(value) => handleChange('breakfast', value)}
             keyboardType="decimal-pad"
             placeholder="0"
@@ -114,7 +124,7 @@ const SettingsScreen = () => {
           <Text style={styles.label}>Обед</Text>
           <TextInput
             style={styles.input}
-            value={String(formData.lunch || '')}
+            value={typeof formData.lunch === 'string' ? formData.lunch : String(formData.lunch || '')}
             onChangeText={(value) => handleChange('lunch', value)}
             keyboardType="decimal-pad"
             placeholder="0"
@@ -125,7 +135,7 @@ const SettingsScreen = () => {
           <Text style={styles.label}>Ужин</Text>
           <TextInput
             style={styles.input}
-            value={String(formData.dinner || '')}
+            value={typeof formData.dinner === 'string' ? formData.dinner : String(formData.dinner || '')}
             onChangeText={(value) => handleChange('dinner', value)}
             keyboardType="decimal-pad"
             placeholder="0"
