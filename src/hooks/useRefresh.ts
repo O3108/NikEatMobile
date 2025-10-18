@@ -26,8 +26,21 @@ export const useRefresh = () => {
 
       setProducts(serverProducts);
       setSettings(serverSettings);
-      setGlucose(serverGlucose);
       setActiveInsulin(serverActiveInsulin);
+
+      // Вызываем calculateGlucose для обновления расчетов глюкозы
+      if (serverGlucose) {
+        api.calculateGlucose(serverGlucose)
+          .then(calculateResponse => {
+            setGlucose(calculateResponse);
+          })
+          .catch(error => {
+            console.warn('Failed to calculate glucose:', error);
+            setGlucose(serverGlucose); // Используем исходные данные при ошибке
+          });
+      } else {
+        setGlucose(serverGlucose);
+      }
 
       setAlertData({ isShow: true, severity: 'success', message: 'Данные обновлены' });
     } catch (error) {
