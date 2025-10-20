@@ -4,16 +4,51 @@ import { useStore } from '../contexts/StoreContext';
 import SyncStatus from '../components/SyncStatus';
 import { useRefresh } from '../hooks/useRefresh';
 
-const GlucoseScreen = () => {
-  const { glucose } = useStore();
-  const { refreshing, onRefresh } = useRefresh();
+interface GlucoseCardProps {
+  title: string;
+  avgValue: number;
+  highCount: number;
+  lowCount: number;
+  date: string;
+}
 
+const GlucoseCard: React.FC<GlucoseCardProps> = ({ title, avgValue, highCount, lowCount, date }) => {
   const formatValue = (value: number) => {
     return value ? value.toFixed(1) : '—';
   };
 
   return (
-    <ScrollView 
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{title}</Text>
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Средняя</Text>
+          <Text style={styles.statValue}>{formatValue(avgValue)}</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Высокая</Text>
+          <Text style={[styles.statValue, styles.highValue]}>
+            {highCount}
+          </Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Низкая</Text>
+          <Text style={[styles.statValue, styles.lowValue]}>
+            {lowCount}
+          </Text>
+        </View>
+      </View>
+      <Text style={styles.dateText}>Дата: {date}</Text>
+    </View>
+  );
+};
+
+const GlucoseScreen = () => {
+  const { glucose } = useStore();
+  const { refreshing, onRefresh } = useRefresh();
+
+  return (
+    <ScrollView
       style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -26,65 +61,27 @@ const GlucoseScreen = () => {
 
       {glucose ? (
         <>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Дневная глюкоза</Text>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Средняя</Text>
-                <Text style={styles.statValue}>{formatValue(glucose.day.value)}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Высокая</Text>
-                <Text style={[styles.statValue, styles.highValue]}>
-                  {glucose.day.highCount}
-                </Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Низкая</Text>
-                <Text style={[styles.statValue, styles.lowValue]}>
-                  {glucose.day.lowCount}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Всего измерений:</Text>
-              <Text style={styles.totalValue}>{glucose.day.totalGlucose}</Text>
-            </View>
-            <Text style={styles.dateText}>Дата: {glucose.day.date}</Text>
-          </View>
+          <GlucoseCard
+            title="Дневная глюкоза"
+            avgValue={glucose.day.value}
+            highCount={glucose.day.highCount}
+            lowCount={glucose.day.lowCount}
+            date={glucose.day.date}
+          />
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Ночная глюкоза</Text>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Средняя</Text>
-                <Text style={styles.statValue}>{formatValue(glucose.night.value)}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Высокая</Text>
-                <Text style={[styles.statValue, styles.highValue]}>
-                  {glucose.night.highCount}
-                </Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Низкая</Text>
-                <Text style={[styles.statValue, styles.lowValue]}>
-                  {glucose.night.lowCount}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Всего измерений:</Text>
-              <Text style={styles.totalValue}>{glucose.night.totalGlucose}</Text>
-            </View>
-            <Text style={styles.dateText}>Дата: {glucose.night.date}</Text>
-          </View>
+          <GlucoseCard
+            title="Ночная глюкоза"
+            avgValue={glucose.night.value}
+            highCount={glucose.night.highCount}
+            lowCount={glucose.night.lowCount}
+            date={glucose.night.date}
+          />
 
           <View style={styles.infoCard}>
             <Text style={styles.infoTitle}>Целевые значения</Text>
-            <Text style={styles.infoText}>• Нормальная глюкоза: 4.0 - 7.0 ммоль/л</Text>
-            <Text style={styles.infoText}>• Высокая глюкоза: {'>'} 7.0 ммоль/л</Text>
-            <Text style={styles.infoText}>• Низкая глюкоза: {'<'} 4.0 ммоль/л</Text>
+            <Text style={styles.infoText}>• Нормальная глюкоза: 6.0 - 8.0 ммоль/л</Text>
+            <Text style={styles.infoText}>• Высокая глюкоза: {'>'} 8.0 ммоль/л</Text>
+            <Text style={styles.infoText}>• Низкая глюкоза: {'<'} 6.0 ммоль/л</Text>
           </View>
         </>
       ) : (
@@ -150,24 +147,6 @@ const styles = StyleSheet.create({
   },
   lowValue: {
     color: '#ff9500',
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    marginBottom: 8,
-  },
-  totalLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  totalValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
   },
   dateText: {
     fontSize: 12,
