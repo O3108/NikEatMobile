@@ -77,6 +77,16 @@ const GlucoseScreen = () => {
             date={glucose.night.date}
           />
 
+          {glucose.allDay && (
+            <GlucoseCard
+              title="Суточная глюкоза"
+              avgValue={glucose.allDay.value}
+              highCount={glucose.allDay.highCount}
+              lowCount={glucose.allDay.lowCount}
+              date={glucose.allDay.date}
+            />
+          )}
+
           <View style={styles.infoCard}>
             <Text style={styles.infoTitle}>Целевые значения</Text>
             <Text style={styles.infoText}>• Нормальная глюкоза: 6.0 - 8.0 ммоль/л</Text>

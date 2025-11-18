@@ -30,6 +30,14 @@ export type Glucose = {
     lowCount: number;
     totalGlucose: number;
   };
+  allDay?: {
+    id: number;
+    date: string;
+    value: number;
+    highCount: number;
+    lowCount: number;
+    totalGlucose: number;
+  };
 };
 
 export type ActiveInsulin = {
