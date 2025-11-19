@@ -2,6 +2,7 @@
   "expo": {
     "name": "NikEat",
     "slug": "nikeat-mobile",
+    "owner": "o3108",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

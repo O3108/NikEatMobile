@@ -8,6 +8,7 @@ export type Settings = {
   id: number;
   longMorning: number;
   longEvening: number;
+  longDay: number;
   breakfast: number;
   lunch: number;
   dinner: number;

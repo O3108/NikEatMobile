@@ -54,6 +54,7 @@ const SettingsScreen = () => {
         id: settings?.id || 1,
         longMorning: parseNumber(String(formData.longMorning || 0)),
         longEvening: parseNumber(String(formData.longEvening || 0)),
+        longDay: parseNumber(String(formData.longDay || 0)),
         breakfast: parseNumber(String(formData.breakfast || 0)),
         lunch: parseNumber(String(formData.lunch || 0)),
         dinner: parseNumber(String(formData.dinner || 0)),
@@ -62,7 +63,7 @@ const SettingsScreen = () => {
       if (isAccessEdit) {
         await api.updateSettings(settingsToSave);
       }
-      
+
       setSettings(settingsToSave);
       setAlertData({ isShow: true, severity: 'success', message: 'Настройки сохранены' });
     } catch (error) {
@@ -82,7 +83,7 @@ const SettingsScreen = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Длинный инсулин</Text>
-        
+
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Утро</Text>
           <TextInput
@@ -104,11 +105,22 @@ const SettingsScreen = () => {
             placeholder="0"
           />
         </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Сутки</Text>
+          <TextInput
+            style={styles.input}
+            value={typeof formData.longDay === 'string' ? formData.longDay : String(formData.longDay || '')}
+            onChangeText={(value) => handleChange('longDay', value)}
+            keyboardType="decimal-pad"
+            placeholder="0"
+          />
+        </View>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Короткий инсулин (на 1 ХЕ)</Text>
-        
+
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Завтрак</Text>
           <TextInput
@@ -143,8 +155,8 @@ const SettingsScreen = () => {
         </View>
       </View>
 
-      <TouchableOpacity 
-        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]} 
+      <TouchableOpacity
+        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
         onPress={handleSave}
         disabled={isSaving}
       >
