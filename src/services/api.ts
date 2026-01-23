@@ -94,6 +94,16 @@ export const api = {
     return data;
   },
 
+  async updateGlucose(glucose: Glucose): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/glucose`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(glucose),
+    });
+    const data = await response.json();
+    if ('error' in data) throw new Error(data.error);
+  },
+
   // Calculate Glucose
   async calculateGlucose(glucose: Glucose): Promise<Glucose> {
     const response = await fetch(`${API_BASE_URL}/api/glucose/calculate`, {

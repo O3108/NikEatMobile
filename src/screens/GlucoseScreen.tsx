@@ -1,8 +1,10 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useStore } from '../contexts/StoreContext';
 import SyncStatus from '../components/SyncStatus';
 import { useRefresh } from '../hooks/useRefresh';
+import { api } from '../services/api';
+import { Glucose } from '../types';
 
 interface GlucoseCardProps {
   title: string;
@@ -10,9 +12,12 @@ interface GlucoseCardProps {
   highCount: number;
   lowCount: number;
   date: string;
+  onClearHigh: () => void;
+  onClearLow: () => void;
+  isLoading: boolean;
 }
 
-const GlucoseCard: React.FC<GlucoseCardProps> = ({ title, avgValue, highCount, lowCount, date }) => {
+const GlucoseCard: React.FC<GlucoseCardProps> = ({ title, avgValue, highCount, lowCount, date, onClearHigh, onClearLow, isLoading }) => {
   const formatValue = (value: number) => {
     return value ? value.toFixed(1) : '—';
   };
@@ -27,15 +32,41 @@ const GlucoseCard: React.FC<GlucoseCardProps> = ({ title, avgValue, highCount, l
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Высокая</Text>
-          <Text style={[styles.statValue, styles.highValue]}>
-            {highCount}
-          </Text>
+          <View style={styles.statWithButton}>
+            <Text style={[styles.statValue, styles.highValue]}>
+              {highCount}
+            </Text>
+            <TouchableOpacity 
+              style={styles.clearButton} 
+              onPress={onClearHigh}
+              disabled={isLoading || highCount === 0}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#007AFF" />
+              ) : (
+                <Text style={styles.clearButtonText}>✕</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Низкая</Text>
-          <Text style={[styles.statValue, styles.lowValue]}>
-            {lowCount}
-          </Text>
+          <View style={styles.statWithButton}>
+            <Text style={[styles.statValue, styles.lowValue]}>
+              {lowCount}
+            </Text>
+            <TouchableOpacity 
+              style={styles.clearButton} 
+              onPress={onClearLow}
+              disabled={isLoading || lowCount === 0}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#007AFF" />
+              ) : (
+                <Text style={styles.clearButtonText}>✕</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
       <Text style={styles.dateText}>Дата: {date}</Text>
@@ -44,8 +75,43 @@ const GlucoseCard: React.FC<GlucoseCardProps> = ({ title, avgValue, highCount, l
 };
 
 const GlucoseScreen = () => {
-  const { glucose } = useStore();
+  const { glucose, setGlucose } = useStore();
   const { refreshing, onRefresh } = useRefresh();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClearCount = async (period: 'day' | 'night' | 'allDay', type: 'high' | 'low') => {
+    if (!glucose) return;
+
+    Alert.alert(
+      'Подтверждение',
+      `Вы уверены, что хотите очистить ${type === 'high' ? 'высокую' : 'низкую'} глюкозу?`,
+      [
+        { text: 'Отмена', style: 'cancel' },
+        {
+          text: 'Очистить',
+          style: 'destructive',
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              const updatedGlucose: Glucose = {
+                ...glucose,
+                [period]: {
+                  ...glucose[period],
+                  [type === 'high' ? 'highCount' : 'lowCount']: 0,
+                },
+              };
+              await api.updateGlucose(updatedGlucose);
+              setGlucose(updatedGlucose);
+            } catch (error) {
+              Alert.alert('Ошибка', 'Не удалось обновить данные');
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <ScrollView
@@ -67,6 +133,9 @@ const GlucoseScreen = () => {
             highCount={glucose.day.highCount}
             lowCount={glucose.day.lowCount}
             date={glucose.day.date}
+            onClearHigh={() => handleClearCount('day', 'high')}
+            onClearLow={() => handleClearCount('day', 'low')}
+            isLoading={isLoading}
           />
 
           <GlucoseCard
@@ -75,6 +144,9 @@ const GlucoseScreen = () => {
             highCount={glucose.night.highCount}
             lowCount={glucose.night.lowCount}
             date={glucose.night.date}
+            onClearHigh={() => handleClearCount('night', 'high')}
+            onClearLow={() => handleClearCount('night', 'low')}
+            isLoading={isLoading}
           />
 
           {glucose.allDay && (
@@ -84,6 +156,9 @@ const GlucoseScreen = () => {
               highCount={glucose.allDay.highCount}
               lowCount={glucose.allDay.lowCount}
               date={glucose.allDay.date}
+              onClearHigh={() => handleClearCount('allDay', 'high')}
+              onClearLow={() => handleClearCount('allDay', 'low')}
+              isLoading={isLoading}
             />
           )}
 
@@ -161,6 +236,24 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 12,
     color: '#999',
+  },
+  statWithButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  clearButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearButtonText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: 'bold',
   },
   infoCard: {
     backgroundColor: '#e3f2fd',
