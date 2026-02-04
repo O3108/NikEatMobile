@@ -110,6 +110,12 @@ const MacroAiScreen = () => {
                     <Text style={styles.resultLabel}>Порция</Text>
                     <Text style={styles.resultValue}>{formatValue(macroInfo.portionWeight)} г</Text>
                   </View>
+                  {macroInfo.portionWeight && macroInfo.carbs &&
+                    <View style={styles.resultRow}>
+                      <Text style={styles.resultLabel}>ХЕ на порцию</Text>
+                      <Text style={styles.resultValue}>{formatValue((macroInfo.portionWeight / 100) * (macroInfo.carbs / 12))} г</Text>
+                    </View>
+                  }
 
                   {macroInfo.note && <Text style={styles.noteText}>{macroInfo.note}</Text>}
                   <Text style={styles.sourceText}>
