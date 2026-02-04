@@ -113,7 +113,7 @@ const MacroAiScreen = () => {
                   {macroInfo.portionWeight && macroInfo.carbs &&
                     <View style={styles.resultRow}>
                       <Text style={styles.resultLabel}>ХЕ на порцию</Text>
-                      <Text style={styles.resultValue}>{formatValue((macroInfo.portionWeight / 100) * (macroInfo.carbs / 12))} г</Text>
+                      <Text style={styles.resultValue}>{formatValue((macroInfo.portionWeight / 100) * (macroInfo.carbs / 10))} г</Text>
                     </View>
                   }
 
