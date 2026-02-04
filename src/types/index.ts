@@ -46,3 +46,14 @@ export type ActiveInsulin = {
   date: string;
   value: number;
 };
+
+export type MacroInfo = {
+  protein: number | null;
+  fat: number | null;
+  carbs: number | null;
+  calories: number | null;
+  portionWeight: number | null;
+  note?: string;
+  sourceModel?: string;
+  rawText?: string;
+};

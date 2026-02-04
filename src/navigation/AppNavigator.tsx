@@ -7,6 +7,7 @@ import CalculatorScreen from '../screens/CalculatorScreen';
 import ProductsScreen from '../screens/ProductsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import GlucoseScreen from '../screens/GlucoseScreen';
+import MacroAiScreen from '../screens/MacroAiScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -22,6 +23,8 @@ const AppNavigator = () => {
               iconName = focused ? 'restaurant' : 'restaurant-outline';
             } else if (route.name === 'Products') {
               iconName = focused ? 'fast-food' : 'fast-food-outline';
+            } else if (route.name === 'MacroAI') {
+              iconName = focused ? 'leaf' : 'leaf-outline';
             } else if (route.name === 'Settings') {
               iconName = focused ? 'settings' : 'settings-outline';
             } else if (route.name === 'Glucose') {
@@ -44,6 +47,11 @@ const AppNavigator = () => {
           name="Products"
           component={ProductsScreen}
           options={{ tabBarLabel: 'Продукты' }}
+        />
+        <Tab.Screen
+          name="MacroAI"
+          component= {MacroAiScreen}
+          options={{ tabBarLabel: 'БЖУ ассистент' }}
         />
         <Tab.Screen
           name="Settings"
